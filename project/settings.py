@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     # Third party apps
     'rest_framework',
     # Local apps
+    'users.apps.UsersConfig'
 ]
 
 MIDDLEWARE = [
@@ -85,6 +86,15 @@ DATABASES = {
 }
 
 
+# Custom user model
+
+AUTH_USER_MODEL = 'users.CustomUser'
+
+AUTHENTICATION_BACKENDS = [
+    'users.backends.CustomBackend'
+]
+
+
 # Password validation
 # https://docs.djangoproject.com/en/3.2/ref/settings/#auth-password-validators
 
@@ -123,7 +133,6 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Django REST Framework
 REST_FRAMEWORK = {
-    'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly'
-    ]
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 10
 }
