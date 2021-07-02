@@ -1,18 +1,17 @@
 from django.contrib.auth.password_validation import validate_password
+from django.contrib.sites.shortcuts import get_current_site
 from rest_framework import serializers
 from users.models import CustomUser
+from users.utils import send_confirmation_email
 
 
 class UserListSerializer(serializers.ModelSerializer):
     url = serializers.HyperlinkedIdentityField(view_name='users:detail')
-    full_name = serializers.SerializerMethodField('get_full_name')
+    full_name = serializers.CharField(source='get_full_name')
 
     class Meta:
         model = CustomUser
         fields = ['url', 'username', 'full_name', 'email']
-
-    def get_full_name(self, obj):
-        return obj.get_full_name
 
 
 class UserDetailSerializer(serializers.ModelSerializer):
@@ -64,5 +63,6 @@ class UserCreateSerializer(serializers.ModelSerializer):
         user = super(UserCreateSerializer, self).create(validated_data)
         user.set_password(validated_data['password'])
         user.save()
+        domain = get_current_site(self.context['request'])
+        send_confirmation_email(user, domain)
         return user
-

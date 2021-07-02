@@ -106,6 +106,10 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 
+# Email configuration
+
+EMAIL_BACKEND = config('EMAIL_BACKEND')
+
 # Internationalization
 # https://docs.djangoproject.com/en/3.2/topics/i18n/
 
