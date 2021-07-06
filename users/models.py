@@ -38,6 +38,11 @@ class CustomUser(AbstractUser):
 
     objects = CustomUserManager()
 
+    class Meta:
+        ordering = ['id']
+        verbose_name = _('User')
+        verbose_name_plural = _('Users')
+
     def __str__(self):
         return self.username
 
