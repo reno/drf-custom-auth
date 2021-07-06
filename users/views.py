@@ -1,20 +1,20 @@
-from django.contrib.auth import login
-from django.core.exceptions import ObjectDoesNotExist
-from django.utils.encoding import force_text
-from django.utils.http import urlsafe_base64_decode
-from rest_framework import generics, mixins
-from rest_framework.views import APIView
+from django.contrib.sites.shortcuts import get_current_site
+from rest_framework import generics, status
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from users.models import CustomUser
-from users.permissions import UserAccessPermission
+from users.permissions import UserAccess, CreateOrAuthenticated
 from users.serializers import (
-    UserListSerializer, UserCreateSerializer, UserDetailSerializer
+    UserListSerializer, UserCreateSerializer, UserDetailSerializer,
+    EmailConfirmSerializer, ChangePasswordSerializer, EmailSerializer,
+    PasswordResetSerializer
 )
-from users.tokens import email_confirmation_token
+from users.utils import send_password_reset_email
 
 
-class UserListView(mixins.CreateModelMixin, generics.ListAPIView):
+class UserListView(generics.ListCreateAPIView):
     queryset = CustomUser.objects.all()
+    permission_classes = [CreateOrAuthenticated]
 
     def get_serializer_class(self):
         if self.request.method == 'GET':
@@ -22,34 +22,70 @@ class UserListView(mixins.CreateModelMixin, generics.ListAPIView):
         if self.request.method == 'POST':
             return UserCreateSerializer
 
-    def post(self, request, *args, **kwargs):
-        return self.create(request, *args, **kwargs)
-
 
 class UserDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = CustomUser.objects.all()
     serializer_class = UserDetailSerializer
-    permission_classes = [UserAccessPermission]
+    permission_classes = [UserAccess]
 
 
-class EmailConfirmView(APIView):
+class EmailConfirmView(generics.GenericAPIView):
+    serializer_class = EmailConfirmSerializer
+    permission_classes = [AllowAny]
 
-    def get(self, request, uidb64, token):
-        try:
-            id = force_text(urlsafe_base64_decode(uidb64))
-            user = CustomUser.objects.get(id=id)
-        except (TypeError, ValueError, OverflowError, ObjectDoesNotExist):
-            user = None
-        if user and email_confirmation_token.check_token(user, token):
-            user.is_active = True
-            user.save()
-            login(request, user)
-            return Response(
-                {'Message': 'Email confirmed with success.'},
-                status=201
-            )
-        else:
-            return Response(
-                {'Error': 'The email confirmation link was invalid.'},
-                status=400
-            )
+    def post(self, request):
+        serializer = self.serializer_class(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = CustomUser.objects.get(id=serializer.validated_data['id'])
+        user.is_active = True
+        user.save()
+        return Response(
+            {'message': 'Email confirmed with success.'},
+            status=status.HTTP_200_OK
+        )
+
+
+class ChangePasswordView(generics.UpdateAPIView):
+    queryset = CustomUser.objects.all()
+    serializer_class = ChangePasswordSerializer
+    permission_classes = [IsAuthenticated]
+
+    def update(self, request, *args, **kwargs):
+        super(ChangePasswordView, self).update(request, *args, **kwargs)
+        return Response(
+            {'message': 'Password updated successfully.'},
+            status=status.HTTP_200_OK
+        )
+
+
+class PasswordReset(generics.GenericAPIView):
+    serializer_class = EmailSerializer
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        serializer = self.serializer_class(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        email = serializer.validated_data.get('email')
+        user = CustomUser.objects.get(email=email)
+        domain = get_current_site(request)
+        send_password_reset_email(user, domain)
+        return Response(
+            {'message': 'We have sent you a link to reset your password.'},
+            status=status.HTTP_200_OK
+        )
+
+
+class PasswordResetConfirm(generics.GenericAPIView):
+    serializer_class = PasswordResetSerializer
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        serializer = self.serializer_class(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = CustomUser.objects.get(id=serializer.validated_data['id'])
+        user.set_password(serializer.validated_data['password'])
+        user.save()
+        return Response(
+            {'message': 'Password changed successfully.'},
+            status=status.HTTP_200_OK
+        )
