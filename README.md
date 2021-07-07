@@ -4,7 +4,7 @@
 
 Um app de autenticação de usuário para Django REST Framework.
 
-Este app tem como objetivo fornecer recursos básicos de cadastro e autenticação de usuário, utilizando recursos inclusos no Django e com um mínimo de dependências.
+Este app tem como objetivo fornecer uma API de cadastro, autenticação e manutenção de usuários, utilizando recursos inclusos no Django e com um mínimo de dependências.
 
 ## ✨ Recursos
 
