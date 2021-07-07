@@ -15,6 +15,6 @@ urlpatterns = [
     path('login/refresh/', jwt_views.TokenRefreshView().as_view(),
          name='token-refresh'),
     path('password-reset/', views.PasswordReset.as_view(), name='password-reset'),
-    path('password-reset-confirm/', views.PasswordResetConfirm.as_view(), name='password-reset-confirm')
-
+    path('password-reset-confirm/', views.PasswordResetConfirm.as_view(),
+         name='password-reset-confirm')
 ]
