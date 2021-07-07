@@ -2,7 +2,7 @@
 
 ![Django](https://img.shields.io/pypi/pyversions/Django) ![Django REST Framework](https://img.shields.io/pypi/djversions/djangorestframework) ![Travis](https://img.shields.io/travis/com/reno/drf-custom-auth) ![Coveralls](https://img.shields.io/coveralls/github/reno/drf-custom-auth)
 
-Um app de autenticação de usuário para Django REST Framework.
+Um app reutilizável de autenticação de usuário para Django REST Framework.
 
 Este app tem como objetivo fornecer uma API de cadastro, autenticação e manutenção de usuários, utilizando recursos inclusos no Django e com um mínimo de dependências.
 
